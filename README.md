@@ -1,6 +1,7 @@
 # Projeto Infra as Code
 
-# CloudFormation WordPress ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNETS
+# CloudFormation WordPress
+ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNETS
 
 Passo 1: Utilize o ecs-wordpress-stack.yml no CloudFormation para iniciar o provisionamento dos recursos para hopedagem do WordPress com banco de dados MySQL.
 

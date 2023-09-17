@@ -35,5 +35,5 @@ Parametros a serem definidos pelo usuario:
       ECSServiceAutoScalingTargetMaxCapacity:
         Capacidade maxima desejada para o auto scaling.
 
-
+# Arquitetura
 ![arquitetura](arquitetura.png)

@@ -6,24 +6,6 @@ Description: Provisionamento da infraestrutura para wordpress.
 
 Parameters:
 
-  VPCId:
-    Type: AWS::EC2::VPC::Id
-    Description: >
-      Required.
-      Especifique o ID da VPC.
-
-  PrivateSubnetIds:
-    Type: List<AWS::EC2::Subnet::Id>
-    Description: >
-      Required.
-      Especifique uma lista de IDs de sub-redes privadas. Selecione apenas duas sub-redes.
-
-  PublicSubnetIds:
-    Type: List<AWS::EC2::Subnet::Id>
-    Description: >
-      Required.
-      Especifique uma lista de IDs de sub-redes publicas. Selecione apenas duas sub-redes.
-
   DatabaseInstanceClass:
     Type: String
     Description: >
@@ -99,48 +81,6 @@ Parameters:
     AllowedValues: [ 'Yes', 'No' ]
     ConstraintDescription: Valores devem ser Yes ou No.
 
-  EFSPerformanceMode:
-    Type: String
-    Description: >
-      Required.
-      Especifique o modo de desempenho do sistema de arquivos.
-    Default: 'generalPurpose'
-    AllowedValues: [ 'generalPurpose', 'maxIO' ]
-    ConstraintDescription: Deve ser generalPurpose ou maxIO.
-
-  EFSThroughputMode:
-    Type: String
-    Description: >
-      Required. 
-      Especifique o modo de rendimento do sistema de arquivos.
-    Default: 'bursting'
-    AllowedValues: [ 'bursting', 'provisioned' ]
-    ConstraintDescription: Deve ser bursting ou provisioned.
-
-  EFSProvisionedThroughput:
-    Type: String
-    Description: >
-      Conditional: Necessario se o modo de taxa de transferencia estiver definido como provisionado.
-      Especifique a taxa de transferencia, medida em MiB/s, a ser provisionada para o sistema de arquivos. O valor deve estar entre 1 e 1024.
-    AllowedPattern: ^$|[0-9]{1,4}
-    ConstraintDescription: Deve estar vazio ou ser um numero entre 1 e 1024.
-
-  CustomDomain:
-    Type: String
-    Description: >
-      Optional.
-      Especifique um dominio personalizado.
-    AllowedPattern: ^$|(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)
-    ConstraintDescription: Formato incorreto.
-
-  CustomDomainCertificateARN:
-    Type: String
-    Description: >
-      Conditional: required se definiu um dominio personalizado.
-      Especifique o ARN do certificado ACM do dominio personalizado.
-    AllowedPattern: ^$|arn:aws:acm:.*
-    ConstraintDescription: Deve estar vazio ou com o ARN do certificado ACM.
-
   ECSTaskvCPU:
     Type: String
     Description: >
@@ -212,12 +152,6 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: Configuracao de Rede
-        Parameters:
-          - VPCId
-          - PrivateSubnetIds
-          - PublicSubnetIds
-      - Label:
           default: Configuracao do Banco de Dados
         Parameters:
           - DatabaseInstanceClass
@@ -231,14 +165,6 @@ Metadata:
           default: Configuracao do Elastic File System
         Parameters:
           - EnableEFSAutomaticBackups
-          - EFSPerformanceMode
-          - EFSThroughputMode
-          - EFSProvisionedThroughput
-      - Label:
-          default: Configuracao de dominio personalizado
-        Parameters:
-          - CustomDomain
-          - CustomDomainCertificateARN
       - Label:
           default: Configuracao do Elastic Container Service
         Parameters:
@@ -250,12 +176,6 @@ Metadata:
           - ECSServiceAutoScalingTargetMinCapacity
           - ECSServiceAutoScalingTargetMaxCapacity
     ParameterLabels:
-      VPCId:
-        default: Em qual VPC voce deseja provisionar os recursos?
-      PrivateSubnetIds:
-        default: Em quais sub-redes privadas os recursos devem ser configurados?
-      PublicSubnetIds:
-        default: Em quais sub-redes publicas os recursos devem ser configurados?
       DatabaseInstanceClass:
         default: Qual classe de instancia deve ser usada para o banco de dados?
       DatabaseAllocatedStorage:
@@ -272,16 +192,6 @@ Metadata:
         default: Com que frequencia as credenciais do banco de dados devem ser alteradas?
       EnableEFSAutomaticBackups:
         default: Deseja fazer backup automaticamente dos dados do sistema de arquivos (EFS)?
-      EFSPerformanceMode:
-        default: Qual modo de desempenho deve ser usado para o sistema de arquivos?
-      EFSThroughputMode:
-        default: Qual modo de transferencia deve ser usado para o sistema de arquivos?
-      EFSProvisionedThroughput:
-        default: Taxa de transferencia provisionada
-      CustomDomain:
-        default: Deseja especificar um dominio personalizado?
-      CustomDomainCertificateARN:
-        default: Certificado ARN
       ECSTaskvCPU:
         default: Quanto vCPU a tarefa deve usar?
       ECSTaskMemory:
@@ -297,22 +207,6 @@ Metadata:
       ECSServiceAutoScalingTargetMaxCapacity:
         default: Qual e a capacidade maxima que deve ser expandida?
 
-################################### STACK RULES ###################################
-
-Rules:
-
-  VerifyEFSProvisionedThroughputMode:
-    RuleCondition: !Equals [ !Ref EFSThroughputMode, 'provisioned' ]
-    Assertions:
-      - Assert: !Not [ !Equals [ !Ref EFSProvisionedThroughput, '' ] ]
-        AssertDescription: Provisioned throughput is mandatory if throughput mode is set to provisioned.
-
-  VerifyCustomDomainEnablement:
-    RuleCondition: !Not [ !Equals [ !Ref CustomDomain, '' ] ]
-    Assertions:
-      - Assert: !Not [ !Equals [ !Ref CustomDomainCertificateARN, '' ] ]
-        AssertDescription: Certificate ARN is mandatory if custom domain is set.
-
 ################################### STACK CONDITIONS ###################################
 
 Conditions:
@@ -326,18 +220,24 @@ Conditions:
   EFSAutomaticBackupsEnabled:
     !Equals [ !Ref EnableEFSAutomaticBackups, 'Yes' ]
 
-  EFSProvisionedThroughputModeEnabled:
-    !Equals [ !Ref EFSThroughputMode, 'provisioned' ]
-
-  CustomDomainEnabled:
-    !Not [ !Equals [ !Ref CustomDomain, '' ] ]
-
   ECSServiceAutoScalingMetricRequestCountPerTargetEnabled:
     !Equals [ !Ref ECSServiceAutoScalingMetric, 'RequestCountPerTarget' ]
 
 ################################### STACK MAPPINGS ###################################
 
 Mappings:
+
+  SubnetConfig:
+    VPC:
+      CIDR: 10.2.0.0/16
+    PublicSubnet1:
+      CIDR: 10.2.0.0/24
+    PublicSubnet2:
+      CIDR: 10.2.1.0/24
+    PrivateSubnet1:
+      CIDR: 10.2.2.0/24
+    PrivateSubnet2:
+      CIDR: 10.2.3.0/24
 
   NameConfig:
     Container:
@@ -367,6 +267,196 @@ Mappings:
 
 Resources:
 
+  #################### VPC ####################
+
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !FindInMap [ SubnetConfig, VPC, CIDR ]
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC'
+
+  #################### INTERNET GATEWAY ####################
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-IG'
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  #################### PUBLIC ROUTE TABLE ####################
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubRT'
+
+  DefaultPublicRoute:
+    DependsOn:
+      - InternetGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  #################### PUBLIC SUBNETS ####################
+
+  #################### SUBNET1 ####################
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !FindInMap [ SubnetConfig, PublicSubnet1, CIDR ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubSN1'
+      VpcId: !Ref VPC
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet1ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubSN1-NG-EIP'
+
+  PublicSubnet1NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt PublicSubnet1ElasticIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubSN1-NG'
+
+  #################### SUBNET2 ####################
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !FindInMap [ SubnetConfig, PublicSubnet2, CIDR ]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubSN2'
+      VpcId: !Ref VPC
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PublicSubnet2ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubSN2-NG-EIP'
+
+  PublicSubnet2NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt PublicSubnet2ElasticIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PubSN2-NG'
+
+  #################### PRIVATE SUBNETS ####################
+
+  #################### SUBNET1 ####################
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !FindInMap [ SubnetConfig, PrivateSubnet1, CIDR ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PrivSN1'
+      VpcId:
+        Ref: VPC
+
+  PrivateSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PrivSN1-RT'
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+      SubnetId: !Ref PrivateSubnet1
+
+  RouteToPublicSubnet1NatGateway:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref PublicSubnet1NatGateway
+
+  #################### SUBNET2 ####################
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !FindInMap [ SubnetConfig, PrivateSubnet2, CIDR ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PrivSN2'
+      VpcId:
+        Ref: VPC
+
+  PrivateSubnet2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-VPC-PrivSN2-RT'
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateSubnet2RouteTable
+      SubnetId: !Ref PrivateSubnet2
+
+  RouteToPublicSubnet2NatGateway:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateSubnet2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref PublicSubnet2NatGateway
+
   ################################### DATABASE ###################################
 
   DatabaseHostedCredentialsRotationLambdaSecurityGroup:
@@ -383,7 +473,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-DBSecretRot-L-SG
-      VpcId: !Ref VPCId
+      VpcId: !Ref VPC
 
   DatabaseSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -404,14 +494,16 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-Database-SG
-      VpcId: !Ref VPCId
+      VpcId: !Ref VPC
 
   DatabaseSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupName: !Sub ${AWS::StackName}-Database-SNG
       DBSubnetGroupDescription: !Sub ${AWS::StackName} Database Subnet Group.
-      SubnetIds: !Ref PrivateSubnetIds
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
 
   DatabaseCredentialsKMSKey:
     Type: AWS::KMS::Key
@@ -512,7 +604,7 @@ Resources:
         RotationType: MySQLSingleUser
         RotationLambdaName: !Sub ${AWS::StackName}-CredentialsRotationManager
         VpcSecurityGroupIds: !Ref DatabaseHostedCredentialsRotationLambdaSecurityGroup
-        VpcSubnetIds: !Join [ ',', !Ref PrivateSubnetIds ]
+        VpcSubnetIds: !Join [ ',', [!Ref PrivateSubnet1, !Ref PrivateSubnet2] ]
       RotationRules:
         AutomaticallyAfterDays: !Ref DatabaseCredentialsRotationSchedule
 
@@ -537,7 +629,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-LB-SG
-      VpcId: !Ref VPCId
+      VpcId: !Ref VPC
 
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
@@ -545,14 +637,16 @@ Resources:
       Name: !Sub ${AWS::StackName}-LB
       Type: application
       Scheme: internet-facing
-      Subnets: !Ref PublicSubnetIds
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
       SecurityGroups:
         - !Ref LoadBalancerSecurityGroup
 
   LoadBalancerTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      VpcId: !Ref VPCId
+      VpcId: !Ref VPC
       Port: 80
       Protocol: HTTP
       Matcher:
@@ -572,30 +666,6 @@ Resources:
       LoadBalancerArn: !Ref LoadBalancer
       Port: 80
       Protocol: HTTP
-      DefaultActions:
-        - !If
-          - CustomDomainEnabled
-          - Type: redirect
-            RedirectConfig:
-              Protocol: HTTPS
-              Port: 443
-              Host: '#{host}'
-              Path: '/#{path}'
-              Query: '#{query}'
-              StatusCode: HTTP_301
-          - Type: forward
-            TargetGroupArn: !Ref LoadBalancerTargetGroup
-
-  LoadBalancerHTTPSListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Condition: CustomDomainEnabled
-    Properties:
-      LoadBalancerArn: !Ref LoadBalancer
-      Port: 443
-      Protocol: HTTPS
-      SslPolicy: ELBSecurityPolicy-2016-08
-      Certificates:
-        - CertificateArn: !Ref CustomDomainCertificateARN
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref LoadBalancerTargetGroup
@@ -632,9 +702,8 @@ Resources:
           Value: !Sub ${AWS::StackName}-EFS
       BackupPolicy:
         Status: !If [ EFSAutomaticBackupsEnabled, ENABLED, DISABLED ]
-      PerformanceMode: !Ref EFSPerformanceMode
-      ThroughputMode: !Ref EFSThroughputMode
-      ProvisionedThroughputInMibps: !If [ EFSProvisionedThroughputModeEnabled, !Ref EFSProvisionedThroughput , !Ref AWS::NoValue ]
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
 
   EFSMountTargetSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -650,13 +719,13 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-EFS-MT-SG
-      VpcId: !Ref VPCId
+      VpcId: !Ref VPC
 
   EFSMountTarget1:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref EFSFileSystem
-      SubnetId: !Select [ 0, !Ref PrivateSubnetIds ]
+      SubnetId: !Ref PrivateSubnet1
       SecurityGroups:
         - !Ref EFSMountTargetSecurityGroup
 
@@ -664,7 +733,7 @@ Resources:
     Type: AWS::EFS::MountTarget
     Properties:
       FileSystemId: !Ref EFSFileSystem
-      SubnetId: !Select [ 1, !Ref PrivateSubnetIds ]
+      SubnetId: !Ref PrivateSubnet2
       SecurityGroups:
         - !Ref EFSMountTargetSecurityGroup
 
@@ -773,13 +842,7 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: !FindInMap [ NameConfig, Container, Name ]
-          Image: wordpress@sha256:7c33c72f1aba217fd5554d5dbc7dbad3274962c5602da353a6196db1241cd05a
-          Environment:
-            - Name: WORDPRESS_CONFIG_EXTRA
-              Value: !Sub
-                - define( 'WP_HOME', '${Protocol}://${Domain}' ); define( 'WP_SITEURL', '${Protocol}://${Domain}' ); define('WP_ALLOW_MULTISITE', true ); define('COOKIE_DOMAIN', $_SERVER['HTTP_HOST']);
-                - Protocol: !If [ CustomDomainEnabled, 'https', 'http' ]
-                  Domain: !If [ CustomDomainEnabled, !Ref CustomDomain, !GetAtt LoadBalancer.DNSName ]
+          Image: wordpress:latest
           Secrets:
             - Name: WORDPRESS_DB_HOST
               ValueFrom: !Sub '${DatabaseCredentials}:host::'
@@ -789,8 +852,6 @@ Resources:
               ValueFrom: !Sub '${DatabaseCredentials}:username::'
             - Name: WORDPRESS_DB_PASSWORD
               ValueFrom: !Sub '${DatabaseCredentials}:password::'
-          LinuxParameters:
-            InitProcessEnabled: true
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -809,9 +870,9 @@ Resources:
         - Name: EFS
           EFSVolumeConfiguration:
             FilesystemId: !Ref EFSFileSystem
-            RootDirectory: /
             AuthorizationConfig:
               AccessPointId: !Ref EFSAccessPoint
+              IAM: DISABLED
             TransitEncryption: ENABLED
       Cpu: !FindInMap [ CPUUnits, !Ref ECSTaskvCPU, Units ]
       Memory: !Ref ECSTaskMemory
@@ -836,7 +897,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-ECS-SG
-      VpcId: !Ref VPCId
+      VpcId: !Ref VPC
 
   ECSService:
     Type: AWS::ECS::Service
@@ -853,7 +914,9 @@ Resources:
           AssignPublicIp: DISABLED
           SecurityGroups:
             - !Ref ECSServiceSecurityGroup
-          Subnets: !Ref PrivateSubnetIds
+          Subnets:
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
       LoadBalancers:
         - ContainerName: !FindInMap [ NameConfig, Container, Name ]
           ContainerPort: 80

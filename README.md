@@ -7,7 +7,7 @@ ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNE
 ## DEPLOY
 
 Importante:
-Definição de vCPU e memoria devem ser compativeis segue o link da AWS para mais informações: [CloudFormation ECS-TaskDefinition-CPU](https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu)
+Definição de vCPU e memoria devem ser compativeis segue o link da AWS para mais informações: [CloudFormation Fargate-Tasks-Size](https://docs.aws.amazon.com/pt_br/AmazonECS/latest/developerguide/fargate-tasks-services.html#fargate-tasks-size)
 
 ### AWS Console
 

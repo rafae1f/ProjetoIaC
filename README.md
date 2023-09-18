@@ -1,10 +1,18 @@
 # Projeto Infra as Code
 
-# CloudFormation WordPress
+## CloudFormation WordPress
 
 ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNETS
 
-Faça upload do arquivo ecs-wordpress-stack.yml no CloudFormation para iniciar o provisionamento dos recursos para hopedagem do WordPress com banco de dados MySQL.
+## Arquitetura
+![arquitetura](Arquitetura.png)
+
+## Como implantar a stack:
+
+### AWS Console
+
+Utilizando o console da AWS faça o upload do arquivo ecs-wordpress-stack.yml no CloudFormation para iniciar o provisionamento dos recursos.
+Você também pode seguir esse tutorial da AWS: [CloudFormation Guia do Usuário](https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html)
 
 Parametros a serem definidos pelo usuario:
 
@@ -15,7 +23,7 @@ Parametros a serem definidos pelo usuario:
       DatabaseMaxAllocatedStorage:
         Quantidade máxima (em gigabytes) que o Amazon RDS pode dimensionar automaticamente o armazenamento do banco de dados.
       DatabaseBackupRetentionPeriod:
-        Quanto tempo os backups automatizados do banco de dados devem ser mantidos.
+        Tempo que os backups automatizados do banco de dados devem ser mantidos.
       EnableDatabaseMultiAZ:
         Se o banco de dados deve ser implantado em diversas zonas de disponibilidade.
       EnableDatabaseReadReplica:
@@ -38,6 +46,3 @@ Parametros a serem definidos pelo usuario:
         Capacidade minima desejada para o auto scaling.
       ECSServiceAutoScalingTargetMaxCapacity:
         Capacidade maxima desejada para o auto scaling.
-
-# Arquitetura
-![arquitetura](Arquitetura.png)

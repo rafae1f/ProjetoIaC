@@ -2,6 +2,10 @@
 
 ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNETS
 
+Projeto desenvolvido para disciplina de Infra como Código
+
+Professor: Renato Marques
+
 ![arquitetura](Arquitetura.png)
 
 ## DEPLOY

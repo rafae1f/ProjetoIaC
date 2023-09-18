@@ -6,6 +6,8 @@ Projeto desenvolvido para disciplina de Infra como Código
 
 Professor: Renato Marques
 
+Colaboradores: Rafael Ferreira, Anderson, Andresa e Matheus
+
 ![arquitetura](Arquitetura.png)
 
 ## DEPLOY

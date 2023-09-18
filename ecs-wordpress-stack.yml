@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::SecretsManager-2020-07-23
 Description: Provisionamento da infraestrutura MultiAZ para WordPress Latest utilizando VPC SUBNETS ECS FARGATE EFS RDS MySQL SECRETMANAGER LAMBDA LOADBALANCER AUTOSCALING.
 
-################################### STACK PARAMETERS ###################################
+################################### PARAMETERS ###################################
 
 Parameters:
 

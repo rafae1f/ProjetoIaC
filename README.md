@@ -7,7 +7,7 @@ ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNE
 ## Arquitetura
 ![arquitetura](Arquitetura.png)
 
-## Como implantar a stack:
+## DEPLOY
 
 ### AWS Console
 

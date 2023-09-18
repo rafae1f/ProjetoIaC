@@ -40,4 +40,4 @@ Parametros a serem definidos pelo usuario:
         Capacidade maxima desejada para o auto scaling.
 
 # Arquitetura
-![arquitetura](arquitetura.png)
+![arquitetura](Arquitetura.png)

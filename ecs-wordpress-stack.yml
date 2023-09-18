@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::SecretsManager-2020-07-23
-Description: Provisionamento da infraestrutura para wordpress.
+Description: Provisionamento da infraestrutura MultiAZ para WordPress Latest utilizando VPC SUBNETS ECS FARGATE EFS RDS MySQL SECRETMANAGER LAMBDA LOADBALANCER AUTOSCALING.
 
 ################################### STACK PARAMETERS ###################################
 
@@ -9,7 +9,6 @@ Parameters:
   DatabaseInstanceClass:
     Type: String
     Description: >
-      Required.
       Defina o tipo de instancia EC2 para o banco de dados.
     Default: db.t3.micro
     AllowedValues: [ db.t3.micro, db.t2.micro ]
@@ -17,7 +16,6 @@ Parameters:
   DatabaseAllocatedStorage:
     Type: Number
     Description: >
-      Required.
       Especifique o tamanho do banco de dados (GiB). Valor de 5 a 3072.
     Default: 5
     MinValue: 5
@@ -27,7 +25,6 @@ Parameters:
   DatabaseMaxAllocatedStorage:
     Type: Number
     Description: >
-      Required.
       Especifique o tamanho maximo do banco de dados (GiB). Valor de 5 a 3072.
     Default: 5
     MinValue: 5
@@ -37,7 +34,6 @@ Parameters:
   DatabaseBackupRetentionPeriod:
     Type: Number
     Description: >
-      Required.
       Especifique quantos dias voce quer manter o backup do banco de dados. Valor de 1 a 35 dias.
     Default: 1
     MinValue: 1
@@ -47,7 +43,6 @@ Parameters:
   EnableDatabaseMultiAZ:
     Type: String
     Description: >
-      Required.
       Especifique Yes para ativar multiplas zonas de disponibilidade. Tambem se aplica a replica de leitura, se habilitada.
     Default: 'No'
     AllowedValues: [ 'Yes', 'No' ]
@@ -56,7 +51,6 @@ Parameters:
   EnableDatabaseReadReplica:
     Type: String
     Description: >
-      Required.
       Especifique Yes para ativar a réplica de leitura do banco de dados.
     Default: 'No'
     AllowedValues: [ 'Yes', 'No' ]
@@ -65,7 +59,6 @@ Parameters:
   DatabaseCredentialsRotationSchedule:
     Type: Number
     Description: >
-      Required.
       Especifique o numero de dias entre as rotacoes programadas automaticas das credenciais do banco de dados. O valor deve ser entre 1 e 365.
     Default: 30
     MinValue: 1
@@ -75,7 +68,6 @@ Parameters:
   EnableEFSAutomaticBackups:
     Type: String
     Description: >
-      Required.
       Especifique Yes para backup automatico do EFS.
     Default: 'No'
     AllowedValues: [ 'Yes', 'No' ]
@@ -84,7 +76,6 @@ Parameters:
   ECSTaskvCPU:
     Type: String
     Description: >
-      Required.
       Especifique a quantidade de vCPU a ser usada pela tarefa. Para mais informacoes: 
       https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu
     Default: '.25'
@@ -94,7 +85,6 @@ Parameters:
   ECSTaskMemory:
     Type: Number
     Description: >
-      Required.
       Especifique a quantidade (em MiB) de memoria a ser usada pela tarefa. Este valor é determinado pelo parametro cpu. Para mais 
       informacoes: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-memory
     Default: 512
@@ -108,16 +98,14 @@ Parameters:
   ECSLogRetentionPeriod:
     Type: Number
     Description: >
-      Required.
       Especifique o numero de dias para reter os logs de eventos.
     Default: 30
     AllowedValues: [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ]
-    ConstraintDescription: Must be 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653.
+    ConstraintDescription: Deve ser entre 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827 or 3653.
 
   ECSServiceAutoScalingMetric:
     Type: String
     Description: >
-      Required.
       Especifique a metrica a ser utilizada para auto scaling.
     Default: 'AverageCPUUtilization'
     AllowedValues: [ 'AverageCPUUtilization', 'AverageMemoryUtilization', 'RequestCountPerTarget' ]
@@ -126,7 +114,6 @@ Parameters:
   ECSServiceAutoScalingTargetValue:
     Type: Number
     Description: >
-      Required.
       Especifique o valor alvo para a metrica de auto scaling. O valor deve ser um numero valido com base na escolha da metrica.
       Exemplo: se a metrica for utilizacao da CPU, entao o valor alvo sera um valor percentual que representa quanto da CPU pode ser usada antes do scaling.
     Default: 75
@@ -134,18 +121,16 @@ Parameters:
   ECSServiceAutoScalingTargetMinCapacity:
     Type: Number
     Description: >
-      Required.
       Especifique o valor minimo de scaling.
     Default: 1
 
   ECSServiceAutoScalingTargetMaxCapacity:
     Type: Number
     Description: >
-      Required.
       Especifique o valor maximo de scaling.
     Default: 2
 
-################################### STACK METADATA ###################################
+################################### METADATA ###################################
 
 Metadata:
 
@@ -207,7 +192,7 @@ Metadata:
       ECSServiceAutoScalingTargetMaxCapacity:
         default: Qual e a capacidade maxima que deve ser expandida?
 
-################################### STACK CONDITIONS ###################################
+################################### CONDITIONS ###################################
 
 Conditions:
 
@@ -223,21 +208,21 @@ Conditions:
   ECSServiceAutoScalingMetricRequestCountPerTargetEnabled:
     !Equals [ !Ref ECSServiceAutoScalingMetric, 'RequestCountPerTarget' ]
 
-################################### STACK MAPPINGS ###################################
+################################### MAPPINGS ###################################
 
 Mappings:
 
   SubnetConfig:
     VPC:
-      CIDR: 10.2.0.0/16
+      CIDR: 10.0.0.0/16
     PublicSubnet1:
-      CIDR: 10.2.0.0/24
+      CIDR: 10.0.0.0/24
     PublicSubnet2:
-      CIDR: 10.2.1.0/24
+      CIDR: 10.0.1.0/24
     PrivateSubnet1:
-      CIDR: 10.2.2.0/24
+      CIDR: 10.0.2.0/24
     PrivateSubnet2:
-      CIDR: 10.2.3.0/24
+      CIDR: 10.0.3.0/24
 
   NameConfig:
     Container:
@@ -263,9 +248,11 @@ Mappings:
     RequestCountPerTarget:
       Metric: ALBRequestCountPerTarget
 
-################################### STACK RESOURCES ###################################
+################################### RESOURCES ###################################
 
 Resources:
+
+  #################### NETWORK ####################
 
   #################### VPC ####################
 
@@ -294,6 +281,8 @@ Resources:
       InternetGatewayId: !Ref InternetGateway
       VpcId: !Ref VPC
 
+  ########################## PUBLIC ##########################
+
   #################### PUBLIC ROUTE TABLE ####################
 
   PublicRouteTable:
@@ -312,8 +301,6 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
-
-  #################### PUBLIC SUBNETS ####################
 
   #################### SUBNET1 ####################
 
@@ -387,7 +374,7 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-VPC-PubSN2-NG'
 
-  #################### PRIVATE SUBNETS ####################
+  #################### PRIVATE ####################
 
   #################### SUBNET1 ####################
 
@@ -463,9 +450,9 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub ${AWS::StackName}-DBSecretRot-L-SG
-      GroupDescription: !Sub ${AWS::StackName} Database Hosted Secret Rototation Lambda Security Group.
+      GroupDescription: !Sub ${AWS::StackName} Database Secret Rototation Lambda Security Group.
       SecurityGroupIngress:
-        - Description: Allow traffic from the internet on port 443.
+        - Description: Permitir trafego da Internet na porta 443.
           IpProtocol: tcp
           FromPort: 443
           ToPort: 443
@@ -481,12 +468,12 @@ Resources:
       GroupName: !Sub ${AWS::StackName}-Database-SG
       GroupDescription: !Sub ${AWS::StackName} Database Security Group.
       SecurityGroupIngress:
-        - Description: Allow traffic from DatabaseHostedCredentialsRotationLambdaSecurityGroup on port 3306.
+        - Description: Permitir trafego tcp do DatabaseHostedCredentialsRotationLambdaSecurityGroup na porta 3306 MySQL.
           IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
           SourceSecurityGroupId: !Ref DatabaseHostedCredentialsRotationLambdaSecurityGroup
-        - Description: Allow traffic from ECSServiceSecurityGroup on port 3306.
+        - Description: Permitir trafego tcp do ECSServiceSecurityGroup na porta 3306 MySQL.
           IpProtocol: tcp
           FromPort: 3306
           ToPort: 3306
@@ -711,7 +698,7 @@ Resources:
       GroupName: !Sub ${AWS::StackName}-EFS-MT-SG
       GroupDescription: !Sub ${AWS::StackName} EFS Mount Target Security Group.
       SecurityGroupIngress:
-        - Description: Allow traffic from ECSServiceSecurityGroup on port 2049.
+        - Description: Permite trafego do ECSServiceSecurityGroup na porta 2049.
           IpProtocol: tcp
           FromPort: 2049
           ToPort: 2049
@@ -889,7 +876,7 @@ Resources:
       GroupName: !Sub ${AWS::StackName}-ECSService-SG
       GroupDescription: !Sub ${AWS::StackName} ECS Service Security Group.
       SecurityGroupIngress:
-        - Description: Allow traffic from LoadBalancerSecurityGroup on port 80.
+        - Description: Prermite trafego do LoadBalancerSecurityGroup na porta 80.
           IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -915,8 +902,8 @@ Resources:
           SecurityGroups:
             - !Ref ECSServiceSecurityGroup
           Subnets:
-          - !Ref PrivateSubnet1
-          - !Ref PrivateSubnet2
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
       LoadBalancers:
         - ContainerName: !FindInMap [ NameConfig, Container, Name ]
           ContainerPort: 80
@@ -963,11 +950,11 @@ Resources:
 
 Outputs:
   LoadBalancerDNSName:
-    Description: Domain of the load balancer.
+    Description: Dominio do balanceador de carga.
     Value: !Sub http://${LoadBalancer.DNSName}
   DatabaseEndpointAddress:
-    Description: Connection endpoint for the database.
+    Description: Endpoint conexao database.
     Value: !GetAtt Database.Endpoint.Address
   DatabaseReadReplicaEndpointAddress:
-    Description: Connection endpoint for the read replica database.
+    Description: Endpoint conexao database replica leitura.
     Value: !If [ DatabaseReadReplicaEnabled, !GetAtt DatabaseReadReplica.Endpoint.Address, '' ]

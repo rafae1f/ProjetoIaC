@@ -1,6 +1,4 @@
-# Projeto Infra as Code
-
-## CloudFormation WordPress
+# CloudFormation ECS WordPress STACK
 
 ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNETS
 

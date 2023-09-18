@@ -6,7 +6,8 @@ ECS FARGATE EFS RDS SECRETSMANAGER KMS LAMBDA LOADBALANCER AUTOSCALING VPC SUBNE
 
 ## DEPLOY
 
-Importante: a definição de vCPU e memoria devem ser compativeis segue o link da AWS para mais informações: [CloudFormation ECS-TaskDefinition-CPU](https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu)
+Importante:
+Definição de vCPU e memoria devem ser compativeis segue o link da AWS para mais informações: [CloudFormation ECS-TaskDefinition-CPU](https://docs.aws.amazon.com/pt_br/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html#cfn-ecs-taskdefinition-cpu)
 
 ### AWS Console
 
@@ -53,22 +54,22 @@ Parametros a serem definidos pelo usuario:
 
 ### AWS CLI
 
-      DatabaseInstanceClass=db.t3.micro
-      DatabaseAllocatedStorage=5
-      DatabaseMaxAllocatedStorage=5
-      DatabaseBackupRetentionPeriod=1
-      EnableDatabaseMultiAZ=No
-      EnableDatabaseReadReplica=No
-      DatabaseCredentialsRotationSchedule=15
-      EnableEFSAutomaticBackups=No
-      ECSTaskvCPU=.25
-      ECSTaskMemory=512
-      ECSLogRetentionPeriod=30
-      ECSServiceAutoScalingMetric=AverageCPUUtilization
-      ECSServiceAutoScalingTargetValue=75
-      ECSServiceAutoScalingTargetMinCapacity=1
-      ECSServiceAutoScalingTargetMaxCapacity=2
+    DatabaseInstanceClass=db.t3.micro
+    DatabaseAllocatedStorage=5
+    DatabaseMaxAllocatedStorage=5
+    DatabaseBackupRetentionPeriod=1
+    EnableDatabaseMultiAZ=No
+    EnableDatabaseReadReplica=No
+    DatabaseCredentialsRotationSchedule=15
+    EnableEFSAutomaticBackups=No
+    ECSTaskvCPU=.25
+    ECSTaskMemory=512
+    ECSLogRetentionPeriod=30
+    ECSServiceAutoScalingMetric=AverageCPUUtilization
+    ECSServiceAutoScalingTargetValue=75
+    ECSServiceAutoScalingTargetMinCapacity=1
+    ECSServiceAutoScalingTargetMaxCapacity=2
 
 Comando para enviar arquivo template e parametros atraves da CLI
 
-      aws cloudformation deploy --template-file ./ecs-wordpress-stack.yaml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --parameter-overrides $(cat parametros.env) --stack-name wordpress
+    aws cloudformation deploy --template-file ./ecs-wordpress-stack.yaml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --parameter-overrides $(cat parametros.env) --stack-name wordpress

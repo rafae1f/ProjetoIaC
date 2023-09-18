@@ -69,6 +69,4 @@ Parametros a serem definidos pelo usuario:
 
 Comando para enviar arquivo template e parametros atraves da CLI
 
-      ```
     aws cloudformation deploy --template-file ./ecs-wordpress-stack.yaml --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND --parameter-overrides $(cat parametros.env) --stack-name wordpress
-    ```
